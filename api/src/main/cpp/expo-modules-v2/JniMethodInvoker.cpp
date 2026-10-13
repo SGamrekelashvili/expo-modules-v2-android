@@ -68,6 +68,27 @@ namespace expo::modules::v2 {
       return padded;
     }
 
+    /**
+     * A call with fewer arguments than [spec] declares: checks that only optional ones are missing,
+     * then runs [invoker] - the specialization that got the call - again on the padded copy. Out of
+     * line, because every specialization would otherwise carry the padded array and its cleanup.
+     */
+    [[gnu::noinline]] facebook::jsi::Value invokeWithOmittedArgs(
+      facebook::jsi::Runtime& rt,
+      JNIEnv* env,
+      const FunctionSpec& spec,
+      jobject receiver,
+      const facebook::jsi::Value* args,
+      const size_t count,
+      const FunctionInvoker invoker
+    ) {
+      if (!omitsOnlyOptionalArgs(spec, count)) {
+        throwArgumentCountMismatch(rt, spec, count);
+      }
+      const auto padded = padOmittedArgs(rt, args, count);
+      return invoker(rt, env, spec, receiver, padded.data(), spec.argTypes.size());
+    }
+
     facebook::jsi::Value callBoolean(const JniMethodCall& call) {
       const jboolean result = call.env->CallNonvirtualBooleanMethodA(
         call.receiver,
@@ -421,17 +442,14 @@ namespace expo::modules::v2 {
       size_t count
     ) {
       if (count != spec.argTypes.size()) [[unlikely]] {
-        if (!omitsOnlyOptionalArgs(spec, count)) {
-          throwArgumentCountMismatch(rt, spec, count);
-        }
-        const auto padded = padOmittedArgs(rt, args, count);
-        return invokeFunction<HasBufferedArgs, NeedsLocalFrame, Method>(
+        return invokeWithOmittedArgs(
           rt,
           env,
           spec,
           receiver,
-          padded.data(),
-          spec.argTypes.size()
+          args,
+          count,
+          &invokeFunction<HasBufferedArgs, NeedsLocalFrame, Method>
         );
       }
 
@@ -474,17 +492,14 @@ namespace expo::modules::v2 {
       size_t count
     ) {
       if (count != spec.argTypes.size()) [[unlikely]] {
-        if (!omitsOnlyOptionalArgs(spec, count)) {
-          throwArgumentCountMismatch(rt, spec, count);
-        }
-        const auto padded = padOmittedArgs(rt, args, count);
-        return invokeAsyncFunction<HasBufferedArgs>(
+        return invokeWithOmittedArgs(
           rt,
           env,
           spec,
           receiver,
-          padded.data(),
-          spec.argTypes.size()
+          args,
+          count,
+          &invokeAsyncFunction<HasBufferedArgs>
         );
       }
 

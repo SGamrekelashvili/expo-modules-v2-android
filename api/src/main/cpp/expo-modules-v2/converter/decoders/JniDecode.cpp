@@ -29,9 +29,19 @@ namespace expo::modules::v2 {
       return facebook::jsi::Value::null();
     }
 
-    return visitCppType<facebook::jsi::Value>(
-      JDynamicTypes::kindOf(env, object),
-      DynamicJniDecoder{.env = env, .rt = rt, .object = object}
-    );
+    const CppType kind = JDynamicTypes::kindOf(env, object);
+    const DynamicJniDecoder dynamic{.env = env, .rt = rt, .object = object};
+    switch (kind) {
+      case CppType::STRING: return dynamic.operator()<CppType::STRING>();
+      case CppType::LIST: return dynamic.operator()<CppType::LIST>();
+      case CppType::MAP: return dynamic.operator()<CppType::MAP>();
+      case CppType::RECORD: return dynamic.operator()<CppType::RECORD>();
+      case CppType::ANY: throwUnknown(kind);
+      default:
+        return visitLeafKind<facebook::jsi::Value>(
+          kind,
+          JniDecoder{.env = env, .rt = rt, .object = object}
+        );
+    }
   }
 } // namespace expo::modules::v2

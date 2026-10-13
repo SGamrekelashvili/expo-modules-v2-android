@@ -2,136 +2,14 @@
 
 #include <stdexcept>
 
-#include <expo-jsi/ByteArrayBuffer.h>
-
 #include <expo-modules-v2/jni/JRecordRegistry.h>
 #include <expo-modules-v2/converter/decoders/JniDecode.h>
 #include <expo-modules-v2/converter/JsiBuilders.h>
-#include <expo-modules-v2/jsi/JavaScriptObject.h>
-#include <expo-modules-v2/jsi/JavaScriptValue.h>
 #include <kolibri/Ref.h>
-#include <kolibri/box.h>
 #include <kolibri/class.h>
 #include <kolibri/string_utils.h>
 
 namespace expo::modules::v2 {
-  template<>
-  facebook::jsi::Value DynamicJniDecoder::operator()<CppType::INT>() const {
-    return facebook::jsi::Value(
-      static_cast<double>(kolibri::UnownedRef<kolibri::JInteger>(object)->intValue(env))
-    );
-  }
-
-  template<>
-  facebook::jsi::Value DynamicJniDecoder::operator()<CppType::BOX_INT>() const {
-    return facebook::jsi::Value(
-      static_cast<double>(kolibri::UnownedRef<kolibri::JInteger>(object)->intValue(env))
-    );
-  }
-
-  // Note: int64 values above 2^53 lose precision; revisit with BigInt support.
-  template<>
-  facebook::jsi::Value DynamicJniDecoder::operator()<CppType::LONG>() const {
-    return facebook::jsi::Value(
-      static_cast<double>(kolibri::UnownedRef<kolibri::JLong>(object)->longValue(env))
-    );
-  }
-
-  template<>
-  facebook::jsi::Value DynamicJniDecoder::operator()<CppType::BOX_LONG>() const {
-    return facebook::jsi::Value(
-      static_cast<double>(kolibri::UnownedRef<kolibri::JLong>(object)->longValue(env))
-    );
-  }
-
-  template<>
-  facebook::jsi::Value DynamicJniDecoder::operator()<CppType::FLOAT>() const {
-    return facebook::jsi::Value(
-      kolibri::UnownedRef<kolibri::JFloat>(object)->floatValue(env)
-    );
-  }
-
-  template<>
-  facebook::jsi::Value DynamicJniDecoder::operator()<CppType::BOX_FLOAT>() const {
-    return facebook::jsi::Value(
-      kolibri::UnownedRef<kolibri::JFloat>(object)->floatValue(env)
-    );
-  }
-
-  template<>
-  facebook::jsi::Value DynamicJniDecoder::operator()<CppType::DOUBLE>() const {
-    return facebook::jsi::Value(
-      kolibri::UnownedRef<kolibri::JDouble>(object)->doubleValue(env)
-    );
-  }
-
-  template<>
-  facebook::jsi::Value DynamicJniDecoder::operator()<CppType::BOX_DOUBLE>() const {
-    return facebook::jsi::Value(
-      kolibri::UnownedRef<kolibri::JDouble>(object)->doubleValue(env)
-    );
-  }
-
-  template<>
-  facebook::jsi::Value DynamicJniDecoder::operator()<CppType::BOOLEAN>() const {
-    return facebook::jsi::Value(
-      kolibri::UnownedRef<kolibri::JBoolean>(object)->booleanValue(env) != 0
-    );
-  }
-
-  template<>
-  facebook::jsi::Value DynamicJniDecoder::operator()<CppType::BOX_BOOLEAN>() const {
-    return facebook::jsi::Value(
-      kolibri::UnownedRef<kolibri::JBoolean>(object)->booleanValue(env) != 0
-    );
-  }
-
-  template<>
-  facebook::jsi::Value DynamicJniDecoder::operator()<CppType::BOOLEAN_ARRAY>() const {
-    return decodeJniArray<jboolean>(env, rt, object, [](const jboolean value) {
-      return facebook::jsi::Value(value != 0);
-    });
-  }
-
-  template<>
-  facebook::jsi::Value DynamicJniDecoder::operator()<CppType::INT_ARRAY>() const {
-    return decodeJniArray<jint>(env, rt, object, [](const jint value) {
-      return facebook::jsi::Value(static_cast<double>(value));
-    });
-  }
-
-  template<>
-  facebook::jsi::Value DynamicJniDecoder::operator()<CppType::LONG_ARRAY>() const {
-    return decodeJniArray<jlong>(env, rt, object, [](const jlong value) {
-      return facebook::jsi::Value(static_cast<double>(value));
-    });
-  }
-
-  template<>
-  facebook::jsi::Value DynamicJniDecoder::operator()<CppType::FLOAT_ARRAY>() const {
-    return decodeJniArray<jfloat>(env, rt, object, [](const jfloat value) {
-      return facebook::jsi::Value(value);
-    });
-  }
-
-  template<>
-  facebook::jsi::Value DynamicJniDecoder::operator()<CppType::DOUBLE_ARRAY>() const {
-    return decodeJniArray<jdouble>(env, rt, object, [](const jdouble value) {
-      return facebook::jsi::Value(value);
-    });
-  }
-
-  /** A byte array lands in an ArrayBuffer rather than a JS array. */
-  template<>
-  facebook::jsi::Value DynamicJniDecoder::operator()<CppType::BYTE_ARRAY>() const {
-    return decodeJniByteArray(env, rt, object);
-  }
-
-  template<>
-  facebook::jsi::Value DynamicJniDecoder::operator()<CppType::UNIT>() const {
-    return facebook::jsi::Value::undefined();
-  }
-
   template<>
   facebook::jsi::Value DynamicJniDecoder::operator()<CppType::STRING>() const {
     return facebook::jsi::String::createFromUtf8(
@@ -181,15 +59,5 @@ namespace expo::modules::v2 {
       );
     }
     return decodeFromJniDynamic(env, rt, map.get());
-  }
-
-  template<>
-  facebook::jsi::Value DynamicJniDecoder::operator()<CppType::JS_VALUE>() const {
-    return unwrapJsiHandle<jsi::JavaScriptValue>(env, rt, object);
-  }
-
-  template<>
-  facebook::jsi::Value DynamicJniDecoder::operator()<CppType::JS_OBJECT>() const {
-    return unwrapJsiHandle<jsi::JavaScriptObject>(env, rt, object);
   }
 } // namespace expo::modules::v2
