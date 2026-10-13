@@ -72,7 +72,7 @@ android {
           "-DEXPO_API_CPP_DIR=${apiCppDir.asFile.path}",
           "-DEXPO_MODULES_V2_WERROR=ON",
         )
-        targets += "expo-kolibri"
+        targets += "expo-modules-v2"
       }
     }
   }
@@ -101,7 +101,7 @@ android {
       excludes += listOf(
         "**/libjsi.so",
         "**/libc++_shared.so",
-        "**/libexpo-kolibri.so",
+        "**/libexpo-modules-v2.so",
       )
     }
   }

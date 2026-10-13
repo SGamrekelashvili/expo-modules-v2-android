@@ -65,7 +65,7 @@ target_include_directories(hermes-env INTERFACE ${JSI_DIR})
 # from the source trees.
 add_library(expo-api-bridge SHARED IMPORTED)
 set_target_properties(expo-api-bridge PROPERTIES
-        IMPORTED_LOCATION ${EXPO_API_LIBS_DIR}/libexpo-kolibri${CMAKE_SHARED_LIBRARY_SUFFIX})
+        IMPORTED_LOCATION ${EXPO_API_LIBS_DIR}/libexpo-modules-v2${CMAKE_SHARED_LIBRARY_SUFFIX})
 target_include_directories(expo-api-bridge INTERFACE
         ${EXPO_API_CPP_DIR}
         ${EXPO_API_CPP_DIR}/expo-jsi
@@ -90,7 +90,7 @@ target_compile_options(expo-test-support PRIVATE -Wall -Wextra -Wpedantic -Werro
 
 target_link_libraries(expo-test-support PRIVATE expo-api-bridge hermes-env)
 
-# Resolve @rpath/libexpo-kolibri.dylib and @rpath/libhermes-test-env.dylib at runtime against the
+# Resolve @rpath/libexpo-modules-v2.dylib and @rpath/libhermes-test-env.dylib at runtime against the
 # directories they are built into and unpacked into.
 set_target_properties(expo-test-support PROPERTIES
         BUILD_RPATH "${EXPO_API_LIBS_DIR};${HERMES_ENV_LIBS_DIR}")

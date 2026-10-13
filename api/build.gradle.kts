@@ -142,13 +142,13 @@ val buildNative by tasks.registering(Exec::class) {
 
   workingDir = rootDir
   // `-k 0`: Ninja keeps going past a failing translation unit, so one build reports every error.
-  commandLine("cmake", "--build", nativeBuildDir.get().asFile.path, "--target", "expo-kolibri", "--", "-k", "0")
+  commandLine("cmake", "--build", nativeBuildDir.get().asFile.path, "--target", "expo-modules-v2", "--", "-k", "0")
 }
 
 val copyNativeLibs by tasks.registering(Copy::class) {
   onlyIf { desktopNativeEnabled }
   dependsOn(buildNative)
-  from(nativeBuildDir.map { it.file("libexpo-kolibri$sharedLibrarySuffix") })
+  from(nativeBuildDir.map { it.file("libexpo-modules-v2$sharedLibrarySuffix") })
   into(nativeLibsDir)
 }
 

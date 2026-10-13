@@ -32,7 +32,7 @@ application {
 
 // --- Native runtime wiring ----------------------------------------------------------------------
 // Directories holding libhermes-test-env.dylib (the Hermes host, unpacked from its published
-// artifact into :api's build dir), libexpo-kolibri.dylib (:api, the JSI bridge) and
+// artifact into :api's build dir), libexpo-modules-v2.dylib (:api, the JSI bridge) and
 // libexpo-test-support.dylib (:test-support, the ExpoTestSupport suite).
 val nativeLibsDirs = listOf(
   project(":api").layout.buildDirectory.dir("hermes-env-libs"),
@@ -49,7 +49,7 @@ val nativeLibsTasks = listOf(
 // Configure every JVM-launching task to find the native libs. This covers the `application`
 // plugin's `run` task as well as the synthetic `...MainKt.main()` tasks IntelliJ generates when
 // you click "Run" in the IDE — both are JavaExec, and without this they fail with
-// `UnsatisfiedLinkError: no expo-kolibri in java.library.path`.
+// `UnsatisfiedLinkError: no expo-modules-v2 in java.library.path`.
 tasks.withType<JavaExec>().configureEach {
   dependsOn(nativeLibsTasks)
   systemProperty("java.library.path", nativeLibsPath)

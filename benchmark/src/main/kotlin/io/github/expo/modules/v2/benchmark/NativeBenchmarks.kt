@@ -6,7 +6,7 @@ import io.github.expo.modules.v2.core.ExpoModulesV2
  * Benchmark-only entry points into this module's native library (`libexpo-benchmark`). Not
  * product surface.
  *
- * The bridge library must be loaded first: `libexpo-benchmark` links against `libexpo-kolibri`
+ * The bridge library must be loaded first: `libexpo-benchmark` links against `libexpo-modules-v2`
  * (the one process-wide kolibri copy) and against the `libfbjni` shipped by `:hermes`, both
  * resolved through the library's rpath once they are on `java.library.path`.
  */

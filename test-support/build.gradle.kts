@@ -47,7 +47,7 @@ val apiNativeLibsDir = project(":api").layout.buildDirectory.dir("native-libs")
 
 val configureNative by tasks.registering(Exec::class) {
   onlyIf { desktopNativeEnabled }
-  // The imported libexpo-kolibri.dylib must exist before CMake configures the imported target.
+  // The imported libexpo-modules-v2.dylib must exist before CMake configures the imported target.
   dependsOn(
     ":api:copyNativeLibs",
     ":api:unpackKolibriCpp",

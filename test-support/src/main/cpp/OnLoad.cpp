@@ -47,7 +47,7 @@ namespace {
 } // namespace
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void*) {
-  // The shared kolibri state lives in libexpo-kolibri.dylib, whose own JNI_OnLoad already ran
+  // The shared kolibri state lives in libexpo-modules-v2.dylib, whose own JNI_OnLoad already ran
   // (TestSupport loads it first via ExpoModulesV2.ensureLoaded); initVM is a bare pointer
   // assignment, so repeating it here is harmless.
   expo::kolibri::initVM(vm);

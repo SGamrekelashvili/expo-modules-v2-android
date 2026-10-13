@@ -19,27 +19,18 @@ else ()
   set(EXPO_MODULES_V2_WARNINGS -Wall -Wextra -Wpedantic)
 endif ()
 
-# --- JSI (React Native's copy) ------------------------------------------------------------------
-# The desktop build compiles the JSI sources vendored in the Hermes tree into its own dylib. Here it
-# must be React Native's `libjsi.so`: the runtime this library attaches to was created by RN, and
-# two copies of the JSI ABI in one process would disagree about object layout. The alias is what
-# lets :api's own expo-jsi/CMakeLists.txt keep linking a target called `jsi`.
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
+
+add_compile_options($<$<NOT:$<CONFIG:Debug>>:-flto>)
+
 find_package(ReactAndroid REQUIRED CONFIG)
 add_library(jsi ALIAS ReactAndroid::jsi)
 
-# --- expo::kolibri (standalone JNI layer) --------------------------------------------------------
-# Prebuilt, unlike the desktop build which compiles it from the published `cpp` zip: the Kolibri
-# Gradle plugin adds the kolibri-android Prefab AAR (headers + libkolibri.a per ABI) to any Android
-# project it is applied to.
 find_package(kolibri-android REQUIRED CONFIG)
 
-# --- expo::jsi (engine-agnostic JSI-only helpers) ------------------------------------------------
 add_subdirectory(${EXPO_API_CPP_DIR}/expo-jsi expo-jsi-build)
 
-# --- The Expo Modules API v2 JNI bridge ---------------------------------------------------------
-# Every .cpp under :api's expo-modules-v2/ except its OnLoad.cpp: this library needs a single
-# JNI_OnLoad that also registers the Android runtime's natives, and two definitions in one .so
-# would collide.
 file(GLOB_RECURSE EXPO_MODULES_V2_SOURCES CONFIGURE_DEPENDS
         "${EXPO_API_CPP_DIR}/expo-modules-v2/*.cpp"
 )
@@ -49,23 +40,40 @@ file(GLOB_RECURSE EXPO_MODULES_V2_REACT_SOURCES CONFIGURE_DEPENDS
         "${CMAKE_CURRENT_SOURCE_DIR}/expo-modules-v2-react/*.cpp"
 )
 
-# Named `expo-kolibri` because that is the library kolibri's own `Kolibri.load()` asks
-# System.loadLibrary for; on Android everything ships in this one .so.
-add_library(expo-kolibri SHARED
+add_library(expo-modules-v2 SHARED
         ${EXPO_MODULES_V2_SOURCES}
         ${EXPO_MODULES_V2_REACT_SOURCES}
 )
 
-target_include_directories(expo-kolibri PRIVATE
+target_include_directories(expo-modules-v2 PRIVATE
         ${EXPO_API_CPP_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_compile_options(expo-kolibri PRIVATE ${EXPO_MODULES_V2_WARNINGS})
+target_compile_options(expo-modules-v2 PRIVATE ${EXPO_MODULES_V2_WARNINGS})
+
+# Hidden visibility cannot reach template parameter objects of a default-visibility type, such as
+# the std::array JNI signatures kolibri passes as template arguments, and their mangled names spell
+# the string out one character at a time. Nothing outside this library refers to them. Every other
+# exported symbol, typeinfo and vtables included, stays exported.
+set(EXPO_MODULES_V2_VERSION_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/expo-modules-v2.map")
+file(WRITE "${EXPO_MODULES_V2_VERSION_SCRIPT}" "{\n  global: *;\n  local: _ZTA*;\n};\n")
+
+target_link_options(expo-modules-v2 PRIVATE
+        # kolibri's prebuilt archive is compiled with default visibility; keep its symbols local too.
+        -Wl,--exclude-libs,ALL
+        "-Wl,--version-script=${EXPO_MODULES_V2_VERSION_SCRIPT}"
+        # Android's packed relocation format, which the loader reads from API 23 (this AAR needs 24).
+        -Wl,--pack-dyn-relocs=android
+        $<$<NOT:$<CONFIG:Debug>>:-flto>
+        # Folds identical functions, mostly template instances that differ only in type. Safe here:
+        # neither the bridge nor kolibri compares function addresses.
+        $<$<NOT:$<CONFIG:Debug>>:-Wl,--icf=all>
+)
 
 # `log` is for __android_log_print, the only place ExpoModulesCore.nativeLog can write on Android.
 # jsi is not listed: expo-jsi links it PUBLIC.
-target_link_libraries(expo-kolibri PRIVATE
+target_link_libraries(expo-modules-v2 PRIVATE
         kolibri-android::kolibri
         expo-jsi
         log

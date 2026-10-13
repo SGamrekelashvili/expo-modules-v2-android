@@ -122,7 +122,7 @@ val testSupportNativeLibsDir = project(":test-support").layout.buildDirectory.di
 
 val configureNative by tasks.registering(Exec::class) {
   onlyIf { desktopNativeEnabled }
-  // The imported libexpo-kolibri.dylib and libfbjni.dylib must exist before CMake configures the
+  // The imported libexpo-modules-v2.dylib and libfbjni.dylib must exist before CMake configures the
   // imported targets.
   dependsOn(
     ":api:copyNativeLibs",
@@ -180,7 +180,7 @@ if (desktopNativeEnabled) {
 
 // --- Native runtime wiring (mirrors :test-app) --------------------------------------------------
 // The benchmarks load libhermes-test-env.dylib + libfbjni.dylib (the Hermes host),
-// libexpo-kolibri.dylib (:api), libexpo-test-support.dylib (:test-support) and
+// libexpo-modules-v2.dylib (:api), libexpo-test-support.dylib (:test-support) and
 // libexpo-benchmark.dylib (this module) via System.loadLibrary, so every JVM-launching task must
 // point java.library.path at all four directories and depend on the tasks that produce them.
 tasks.withType<JavaExec>().configureEach {

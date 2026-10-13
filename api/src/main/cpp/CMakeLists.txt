@@ -71,20 +71,20 @@ add_subdirectory(expo-jsi)
 file(GLOB_RECURSE EXPO_MODULES_V2_SOURCES CONFIGURE_DEPENDS
         "${CMAKE_CURRENT_SOURCE_DIR}/expo-modules-v2/*.cpp"
 )
-add_library(expo-kolibri SHARED ${EXPO_MODULES_V2_SOURCES})
+add_library(expo-modules-v2 SHARED ${EXPO_MODULES_V2_SOURCES})
 
-target_include_directories(expo-kolibri PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(expo-modules-v2 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Compile our own sources with the full warning set, and treat every warning as a hard error so
 # regressions can't slip in.
-target_compile_options(expo-kolibri PRIVATE -Wall -Wextra -Wpedantic -Werror)
+target_compile_options(expo-modules-v2 PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
 # jsi is not listed directly: expo-jsi already links it PUBLIC.
-target_link_libraries(expo-kolibri PRIVATE
+target_link_libraries(expo-modules-v2 PRIVATE
         kolibri
         expo-jsi
 )
 
 # Resolve @rpath/libhermes-test-env.dylib at runtime against the directory the engine artifact is
 # unpacked into.
-set_target_properties(expo-kolibri PROPERTIES BUILD_RPATH ${HERMES_ENV_LIBS_DIR})
+set_target_properties(expo-modules-v2 PROPERTIES BUILD_RPATH ${HERMES_ENV_LIBS_DIR})

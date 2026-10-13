@@ -12,7 +12,7 @@ import io.github.expo.modules.v2.jsi.JavaScriptRuntime
  * suite (`__convertRoundTrip`, `__binaryNativeRoundTrip`, `__nativeStateChainSmoke`, ...) — to the given
  * runtime. Production runtimes never carry these; tests and benchmarks install them explicitly.
  *
- * The bridge library must be loaded first: `libexpo-test-support` links against `libexpo-kolibri`
+ * The bridge library must be loaded first: `libexpo-test-support` links against `libexpo-modules-v2`
  * (the one process-wide kolibri/jsi copy), resolved through the library's rpath once it is on
  * `java.library.path`.
  */
