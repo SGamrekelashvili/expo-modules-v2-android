@@ -9,6 +9,7 @@
 
 #include <expo-modules-v2/records/RecordRegistry.h>
 #include <expo-modules-v2/descriptor/ExpectedType.h>
+#include <expo-modules-v2/utils/Throw.h>
 
 namespace expo::modules::v2 {
   /**
@@ -31,11 +32,11 @@ namespace expo::modules::v2 {
   }
 
   [[noreturn]] ALWAYS_INLINE void throwNullInNonNullable(facebook::jsi::Runtime& rt, const ExpectedType& type) {
-    throw facebook::jsi::JSError(
-      rt,
-      std::string("Cannot convert null/undefined into a non-nullable ") +
-      type.kotlinType() + " slot"
-    );
+    throwJSError(rt, {
+      "Cannot convert null/undefined into a non-nullable ",
+      type.kotlinType(),
+      " slot",
+    });
   }
 
   [[nodiscard]] ALWAYS_INLINE bool isAbsentOptionalField(
@@ -56,11 +57,13 @@ namespace expo::modules::v2 {
     facebook::jsi::Value value = object.getProperty(rt, fieldName);
     if (!field.type.nullable() && field.type.kind() != CppType::JS_VALUE &&
         (value.isUndefined() || value.isNull()) && !isAbsentOptionalField(field, value)) {
-      throw facebook::jsi::JSError(
-        rt,
-        "Record '" + schema.name + "': field '" + field.name +
-        "' is null or missing but declared non-nullable"
-      );
+      throwJSError(rt, {
+        "Record '",
+        schema.name,
+        "': field '",
+        field.name,
+        "' is null or missing but declared non-nullable",
+      });
     }
     return value;
   }

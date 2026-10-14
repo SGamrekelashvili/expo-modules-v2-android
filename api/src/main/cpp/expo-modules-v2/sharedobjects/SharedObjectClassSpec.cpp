@@ -5,6 +5,7 @@
 #include <unordered_set>
 
 #include <expo-modules-v2/events/EventEmitter.h>
+#include <expo-modules-v2/utils/Throw.h>
 
 namespace expo::modules::v2::sharedobjects {
   void SharedObjectClassSpec::validateExportNames() const {
@@ -22,19 +23,24 @@ namespace expo::modules::v2::sharedobjects {
     }
 
     if (names.size() != functions.size() + properties.size() + events.size()) {
-      throw std::invalid_argument(
-        "Shared object class '" + name + "' declares the same export name twice"
-      );
+      throwInvalidArgument({
+        "Shared object class '",
+        name,
+        "' declares the same export name twice",
+      });
     }
 
     // The prototype defines these itself, non-configurable, so a second definition would throw
     // halfway through installing the class.
     for (const std::string_view exportName: names) {
       if (events::isEmitterMemberName(exportName)) {
-        throw std::invalid_argument(
-          "Shared object class '" + name + "' exports '" + std::string(exportName) +
-          "', which is reserved for the event emitter"
-        );
+        throwInvalidArgument({
+          "Shared object class '",
+          name,
+          "' exports '",
+          std::string(exportName),
+          "', which is reserved for the event emitter",
+        });
       }
     }
   }

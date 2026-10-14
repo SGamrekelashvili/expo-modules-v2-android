@@ -11,18 +11,20 @@
 #include <kolibri/Ref.h>
 #include <kolibri/class.h>
 #include <kolibri/env.h>
+#include <kolibri/defines.h>
 
 #include <expo-modules-v2/jni/JSharedObjectRegistry.h>
+#include <expo-modules-v2/utils/Throw.h>
 
 namespace expo::modules::v2::sharedobjects {
   namespace {
     std::mutex& registryMutex() {
-      static std::mutex mutex;
+      NO_DESTROY static std::mutex mutex;
       return mutex;
     }
 
     std::unordered_map<int, std::unique_ptr<const SharedObjectClassSpec>>& registryMap() {
-      static std::unordered_map<int, std::unique_ptr<const SharedObjectClassSpec>> map;
+      NO_DESTROY static std::unordered_map<int, std::unique_ptr<const SharedObjectClassSpec>> map;
       return map;
     }
 
@@ -95,18 +97,20 @@ namespace expo::modules::v2::sharedobjects {
     // members mention, and two threads racing here just build the same spec twice.
     const jclass declaredClass = javaClassOf(classId);
     if (declaredClass == nullptr) {
-      throw std::invalid_argument(
-        "No shared object class is registered for id " + std::to_string(classId)
-      );
+      throwInvalidArgument({
+        "No shared object class is registered for id ",
+        std::to_string(classId),
+      });
     }
 
     // TODO(@lukmccall): use SharedObjectClassSpec instead of JSharedObjectRegistry::ClassExports
     std::optional<JSharedObjectRegistry::ClassExports> exports =
       JSharedObjectRegistry::encodeClass(kolibri::getEnv(), classId, declaredClass);
     if (!exports.has_value()) {
-      throw std::invalid_argument(
-        "No shared object class is described for id " + std::to_string(classId)
-      );
+      throwInvalidArgument({
+        "No shared object class is described for id ",
+        std::to_string(classId),
+      });
     }
 
     auto spec = std::make_unique<SharedObjectClassSpec>();

@@ -15,6 +15,7 @@
 #include <expo-modules-v2/objects/ObjectRegistry.h>
 #include <expo-modules-v2/objects/RuntimeObjects.h>
 #include <expo-modules-v2/sharedobjects/SharedObjectClassObject.h>
+#include <expo-modules-v2/utils/Throw.h>
 
 namespace expo::modules::v2::jsi {
   namespace {
@@ -234,10 +235,7 @@ namespace expo::modules::v2::jsi {
     } catch (facebook::jsi::JSError&) {
       throw;
     } catch (const std::exception& error) {
-      throw facebook::jsi::JSError(
-        rt,
-        "Failed to materialize module '" + moduleName + "': " + error.what()
-      );
+      throwJSError(rt, {"Failed to materialize module '", moduleName, "': ", error.what()});
     }
   }
 
@@ -246,10 +244,7 @@ namespace expo::modules::v2::jsi {
     const facebook::jsi::PropNameID& name,
     const facebook::jsi::Value&
   ) {
-    throw facebook::jsi::JSError(
-      rt,
-      "expo.modules is read-only (attempted to set '" + name.utf8(rt) + "')"
-    );
+    throwJSError(rt, {"expo.modules is read-only (attempted to set '", name.utf8(rt), "')"});
   }
 
   std::vector<facebook::jsi::PropNameID> ModulesHostObject::getPropertyNames(

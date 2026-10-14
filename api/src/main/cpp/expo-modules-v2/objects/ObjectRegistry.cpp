@@ -4,15 +4,17 @@
 #include <unordered_map>
 #include <utility>
 
+#include <kolibri/defines.h>
+
 namespace expo::modules::v2::objects {
   namespace {
     std::mutex& registryMutex() {
-      static std::mutex mutex;
+      NO_DESTROY static std::mutex mutex;
       return mutex;
     }
 
     std::unordered_map<ObjectId::Value, std::weak_ptr<ObjectState>>& states() {
-      static std::unordered_map<ObjectId::Value, std::weak_ptr<ObjectState>> map;
+      NO_DESTROY static std::unordered_map<ObjectId::Value, std::weak_ptr<ObjectState>> map;
       return map;
     }
   } // namespace

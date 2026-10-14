@@ -1,5 +1,7 @@
 #include <expo-modules-v2/converter/ByteView.h>
 
+#include <expo-modules-v2/utils/Throw.h>
+
 namespace expo::modules::v2 {
   ByteView byteViewOf(facebook::jsi::Runtime& rt, const facebook::jsi::Value& value) {
     if (value.isObject()) {
@@ -27,9 +29,8 @@ namespace expo::modules::v2 {
       }
     }
 
-    throw facebook::jsi::JSError(
-      rt,
-      "Expected an ArrayBuffer, a typed array such as a Uint8Array, or a DataView for a byte array"
-    );
+    throwJSError(rt, {
+      "Expected an ArrayBuffer, a typed array such as a Uint8Array, or a DataView for a byte array",
+    });
   }
 }

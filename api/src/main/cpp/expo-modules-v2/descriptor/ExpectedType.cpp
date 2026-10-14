@@ -15,6 +15,7 @@
 #include <expo-modules-v2/sharedobjects/SharedObjectClassRegistry.h>
 #include <expo-modules-v2/jsi/JavaScriptValue.h>
 #include <expo-modules-v2/jsi/JavaScriptObject.h>
+#include <expo-modules-v2/utils/Throw.h>
 
 namespace expo::modules::v2 {
   namespace jsi {
@@ -45,14 +46,14 @@ namespace expo::modules::v2 {
       nullable_(nullable),
       usesBuffer_(usesBuffer) {
     if (nullable && isUnboxedScalar(type)) {
-      throw std::invalid_argument("Unboxed scalar ExpectedType cannot carry the nullable flag");
+      throwInvalidArgument({"Unboxed scalar ExpectedType cannot carry the nullable flag"});
     }
     if (
       usesBuffer && (
         isUnboxedScalar(type) || type == LeafType::JS_VALUE || type == LeafType::JS_OBJECT
       )
     ) {
-      throw std::invalid_argument("This leaf ExpectedType cannot ride the binary buffer");
+      throwInvalidArgument({"This leaf ExpectedType cannot ride the binary buffer"});
     }
   }
 

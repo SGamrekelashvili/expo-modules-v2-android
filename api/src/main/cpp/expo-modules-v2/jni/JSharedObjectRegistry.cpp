@@ -6,6 +6,7 @@
 #include <kolibri/binary/BinaryReader.h>
 
 #include <expo-modules-v2/decoders/ModuleDescriptorDecoder.h>
+#include <expo-modules-v2/utils/Throw.h>
 
 namespace expo::modules::v2 {
   int JSharedObjectRegistry::classIdOf(JNIEnv* env, jobject instance) {
@@ -28,7 +29,7 @@ namespace expo::modules::v2 {
 
     const kolibri::binary::BinaryBuffer::Claim claim;
     if (!claim) {
-      throw std::runtime_error("The binary bridge buffer is already in use");
+      throwRuntimeError({"The binary bridge buffer is already in use"});
     }
 
     kolibri::binary::Reader reader = claim.reader();
@@ -36,7 +37,7 @@ namespace expo::modules::v2 {
     descriptor::ModuleDescriptorPayload payload =
       decoders::decodeModuleDescriptorPayload(reader, declaringClass);
     if (!reader.isOnEnd()) {
-      throw std::invalid_argument("Trailing bytes in the shared object class metadata payload");
+      throwInvalidArgument({"Trailing bytes in the shared object class metadata payload"});
     }
 
     return ClassExports{

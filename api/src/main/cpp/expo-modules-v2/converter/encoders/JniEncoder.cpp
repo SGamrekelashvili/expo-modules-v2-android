@@ -11,6 +11,7 @@
 #include <expo-modules-v2/sharedobjects/SharedObjectClassRegistry.h>
 #include <expo-modules-v2/sharedobjects/SharedObjectState.h>
 #include <expo-modules-v2/sharedobjects/SharedObjects.h>
+#include <expo-modules-v2/utils/Throw.h>
 #include <kolibri/Ref.h>
 #include <kolibri/array.h>
 #include <kolibri/box.h>
@@ -63,39 +64,37 @@ namespace expo::modules::v2 {
     using sharedobjects::SharedObjectClassRegistry;
 
     if (!value.isObject()) {
-      throw facebook::jsi::JSError(
-        rt,
-        "Expected " + SharedObjectClassRegistry::nameOf(sharedType.classId) +
-        ", got a value that is not an object"
-      );
+      throwJSError(rt, {
+        "Expected ",
+        SharedObjectClassRegistry::nameOf(sharedType.classId),
+        ", got a value that is not an object",
+      });
     }
 
     const facebook::jsi::Object object = value.getObject(rt);
     const auto* state = sharedobjects::SharedObjects::stateOf(rt, object);
     if (state == nullptr) {
-      throw facebook::jsi::JSError(
-        rt,
-        "Expected " + SharedObjectClassRegistry::nameOf(sharedType.classId) +
-        ", got an object that is not a shared object"
-      );
+      throwJSError(rt, {
+        "Expected ",
+        SharedObjectClassRegistry::nameOf(sharedType.classId),
+        ", got an object that is not a shared object",
+      });
     }
 
     if (state->released()) {
-      throw facebook::jsi::JSError(
-        rt,
-        "Cannot pass a released " + state->spec().name + " to a native function"
-      );
+      throwJSError(rt, {"Cannot pass a released ", state->spec().name, " to a native function"});
     }
 
     if (state->spec().classId != sharedType.classId) {
       const jclass declaredClass = SharedObjectClassRegistry::javaClassOf(sharedType.classId);
       // TODO(@lukmccall): move class check to kotlin
       if (declaredClass == nullptr || !env->IsInstanceOf(state->instance(), declaredClass)) {
-        throw facebook::jsi::JSError(
-          rt,
-          "Expected " + SharedObjectClassRegistry::nameOf(sharedType.classId) +
-          ", got " + state->spec().name
-        );
+        throwJSError(rt, {
+          "Expected ",
+          SharedObjectClassRegistry::nameOf(sharedType.classId),
+          ", got ",
+          state->spec().name,
+        });
       }
     }
 

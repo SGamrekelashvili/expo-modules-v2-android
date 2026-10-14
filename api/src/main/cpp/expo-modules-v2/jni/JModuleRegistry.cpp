@@ -4,6 +4,8 @@
 #include <kolibri/binary/BinaryReader.h>
 #include <kolibri/native_method.h>
 
+#include <expo-modules-v2/utils/Throw.h>
+
 namespace expo::modules::v2 {
   std::optional<descriptor::ModuleDescriptorPayload> JModuleRegistry::Accessors::encodeModule(
     JNIEnv* env,
@@ -18,7 +20,7 @@ namespace expo::modules::v2 {
 
     const kolibri::binary::BinaryBuffer::Claim claim;
     if (!claim) {
-      throw std::runtime_error("The binary bridge buffer is already in use");
+      throwRuntimeError({"The binary bridge buffer is already in use"});
     }
 
     kolibri::binary::Reader reader = claim.reader();
@@ -26,7 +28,7 @@ namespace expo::modules::v2 {
     descriptor::ModuleDescriptorPayload descriptor =
       decoders::decodeModuleDescriptorPayload(reader, declaringClass);
     if (!reader.isOnEnd()) {
-      throw std::invalid_argument("Trailing bytes in the module metadata payload");
+      throwInvalidArgument({"Trailing bytes in the module metadata payload"});
     }
 
     return descriptor;
@@ -37,7 +39,7 @@ namespace expo::modules::v2 {
 
     const kolibri::binary::BinaryBuffer::Claim claim;
     if (!claim) {
-      throw std::runtime_error("The binary bridge buffer is already in use");
+      throwRuntimeError({"The binary bridge buffer is already in use"});
     }
 
     kolibri::binary::Reader reader = claim.reader(payloadSize);
@@ -53,7 +55,7 @@ namespace expo::modules::v2 {
     }
 
     if (!reader.isOnEnd()) {
-      throw std::invalid_argument("Trailing bytes in the module-name payload");
+      throwInvalidArgument({"Trailing bytes in the module-name payload"});
     }
 
     return names;

@@ -9,6 +9,7 @@
 
 #include <expo-modules-v2/sharedobjects/SharedObjectClassSpec.h>
 #include <expo-modules-v2/sharedobjects/SharedObjectState.h>
+#include <expo-modules-v2/utils/Throw.h>
 
 #include "SharedObjects.h"
 
@@ -30,10 +31,11 @@ namespace expo::modules::v2::sharedobjects {
         }
       }
 
-      throw facebook::jsi::JSError(
-        rt,
-        "'" + std::string(member) + "' called on something that is not a shared object"
-      );
+      throwJSError(rt, {
+        "'",
+        std::string(member),
+        "' called on something that is not a shared object",
+      });
     }
 
     SharedObjectState* liveReceiverOf(
@@ -43,10 +45,12 @@ namespace expo::modules::v2::sharedobjects {
     ) {
       SharedObjectState* state = receiverOf(rt, thisValue, member);
       if (state->released()) {
-        throw facebook::jsi::JSError(
-          rt,
-          "Cannot access '" + std::string(member) + "' on a released " + state->spec().name
-        );
+        throwJSError(rt, {
+          "Cannot access '",
+          std::string(member),
+          "' on a released ",
+          state->spec().name,
+        });
       }
       return state;
     }
@@ -136,6 +140,29 @@ namespace expo::modules::v2::sharedobjects {
         std::move(body)
       );
     }
+
+    // The two members every prototype gets are plain functions, not lambdas: std::function shares
+    // one instantiation among all the function pointers it holds, where each lambda adds its own.
+    facebook::jsi::Value releaseMember(
+      facebook::jsi::Runtime& rt,
+      const facebook::jsi::Value& thisValue,
+      const facebook::jsi::Value*,
+      size_t
+    ) {
+      receiverOf(rt, thisValue, kRelease)->release();
+      return facebook::jsi::Value::undefined();
+    }
+
+    facebook::jsi::Value objectIdGetter(
+      facebook::jsi::Runtime& rt,
+      const facebook::jsi::Value& thisValue,
+      const facebook::jsi::Value*,
+      size_t
+    ) {
+      return facebook::jsi::Value(
+        static_cast<double>(receiverOf(rt, thisValue, kObjectId)->objectId())
+      );
+    }
   } // namespace
 
   void installPrototypeMembers(
@@ -153,19 +180,7 @@ namespace expo::modules::v2::sharedobjects {
       prototype,
       defineProperty,
       release,
-      hostFunction(
-        rt,
-        release,
-        0,
-        [](
-        facebook::jsi::Runtime& rt,
-        const facebook::jsi::Value& thisValue,
-        const facebook::jsi::Value*,
-        size_t) -> facebook::jsi::Value {
-          receiverOf(rt, thisValue, kRelease)->release();
-          return facebook::jsi::Value::undefined();
-        }
-      )
+      hostFunction(rt, release, 0, &releaseMember)
     );
 
     const std::string objectId(kObjectId);
@@ -174,20 +189,7 @@ namespace expo::modules::v2::sharedobjects {
       prototype,
       defineProperty,
       objectId,
-      hostFunction(
-        rt,
-        objectId,
-        0,
-        [](
-        facebook::jsi::Runtime& rt,
-        const facebook::jsi::Value& thisValue,
-        const facebook::jsi::Value*,
-        size_t) -> facebook::jsi::Value {
-          return facebook::jsi::Value(
-            static_cast<double>(receiverOf(rt, thisValue, kObjectId)->objectId())
-          );
-        }
-      ),
+      hostFunction(rt, objectId, 0, &objectIdGetter),
       std::nullopt,
       /* enumerable */ false
     );
@@ -234,7 +236,7 @@ namespace expo::modules::v2::sharedobjects {
           const size_t count
         ) -> facebook::jsi::Value {
             if (count < 1) {
-              throw facebook::jsi::JSError(rt, "Setting '" + name + "' needs a value");
+              throwJSError(rt, {"Setting '", name, "' needs a value"});
             }
             liveReceiverOf(rt, thisValue, name)->setProperty(rt, index, args[0]);
             return facebook::jsi::Value::undefined();

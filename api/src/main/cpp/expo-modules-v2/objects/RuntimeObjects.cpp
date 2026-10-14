@@ -5,6 +5,7 @@
 #include <mutex>
 
 #include <kolibri/env.h>
+#include <kolibri/defines.h>
 
 #include <expo-modules-v2/async/AsyncRuntimeState.h>
 #include <expo-modules-v2/events/EventEmitter.h>
@@ -15,12 +16,12 @@
 namespace expo::modules::v2::objects {
   namespace {
     std::mutex& registryMutex() {
-      static std::mutex mutex;
+      NO_DESTROY static std::mutex mutex;
       return mutex;
     }
 
     std::unordered_map<const facebook::jsi::Runtime*, RuntimeObjects*>& registry() {
-      static std::unordered_map<const facebook::jsi::Runtime*, RuntimeObjects*> tables;
+      NO_DESTROY static std::unordered_map<const facebook::jsi::Runtime*, RuntimeObjects*> tables;
       return tables;
     }
 

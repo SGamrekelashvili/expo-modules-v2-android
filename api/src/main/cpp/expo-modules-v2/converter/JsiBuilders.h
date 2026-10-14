@@ -14,6 +14,8 @@
 #include <kolibri/Ref.h>
 #include <kolibri/array.h>
 
+#include <expo-modules-v2/utils/Throw.h>
+
 namespace expo::modules::v2 {
   template<typename MakeOne>
   ALWAYS_INLINE facebook::jsi::Value buildJsArray(facebook::jsi::Runtime& rt, size_t count, MakeOne&& makeOne) {
@@ -70,10 +72,11 @@ namespace expo::modules::v2 {
     auto* handle = kolibri::JNativeObject::nativeThis<Handle>(env, object);
     constexpr bool isObjectHandle = requires { handle->object(); };
     if (&handle->runtime() != &rt) {
-      throw std::runtime_error(
-        std::string("The returned ") + (isObjectHandle ? "JavaScriptObject" : "JavaScriptValue") +
-        " belongs to a different runtime"
-      );
+      throwRuntimeError({
+        "The returned ",
+        (isObjectHandle ? "JavaScriptObject" : "JavaScriptValue"),
+        " belongs to a different runtime",
+      });
     }
     if constexpr (isObjectHandle) {
       return facebook::jsi::Value(rt, handle->object());

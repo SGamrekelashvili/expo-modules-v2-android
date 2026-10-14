@@ -6,6 +6,7 @@
 
 #include <expo-modules-v2/descriptor/HostFunctionSpec.h>
 #include <expo-modules-v2/decoders/ExpectedTypeDecoder.h>
+#include <expo-modules-v2/utils/Throw.h>
 
 namespace expo::modules::v2::decoders {
   descriptor::HostFunctionSpec decodeHostFunctionSpec(
@@ -19,11 +20,15 @@ namespace expo::modules::v2::decoders {
 
     const size_t argsCount = reader.readCount();
     if (argsCount > descriptor::FunctionSpec::kMaxArgs) {
-      throw std::invalid_argument(
-        "Function " + name + " declares " + std::to_string(argsCount) +
-        " arguments; at most " +
-        std::to_string(descriptor::FunctionSpec::kMaxArgs) + " are supported"
-      );
+      throwInvalidArgument({
+        "Function ",
+        name,
+        " declares ",
+        std::to_string(argsCount),
+        " arguments; at most ",
+        std::to_string(descriptor::FunctionSpec::kMaxArgs),
+        " are supported",
+      });
     }
     std::vector<ExpectedType> argTypes;
     argTypes.reserve(argsCount);

@@ -6,6 +6,7 @@
 
 #include <expo-modules-v2/decoders/ExpectedTypeDecoder.h>
 #include <expo-modules-v2/sharedobjects/SharedObjectClassRegistry.h>
+#include <expo-modules-v2/utils/Throw.h>
 
 namespace expo::modules::v2::decoders {
   descriptor::SharedClassSpec decodeSharedClassSpec(kolibri::binary::Reader& reader) {
@@ -14,18 +15,24 @@ namespace expo::modules::v2::decoders {
 
     std::string trampolineName = reader.readString();
     if (trampolineName.empty()) {
-      throw std::invalid_argument(
-        "Constructable shared class " + jsName + " declares no constructor trampoline"
-      );
+      throwInvalidArgument({
+        "Constructable shared class ",
+        jsName,
+        " declares no constructor trampoline",
+      });
     }
 
     const size_t argsCount = reader.readCount();
     if (argsCount > descriptor::FunctionSpec::kMaxArgs) {
-      throw std::invalid_argument(
-        "Constructor of " + jsName + " declares " + std::to_string(argsCount) +
-        " arguments; at most " +
-        std::to_string(descriptor::FunctionSpec::kMaxArgs) + " are supported"
-      );
+      throwInvalidArgument({
+        "Constructor of ",
+        jsName,
+        " declares ",
+        std::to_string(argsCount),
+        " arguments; at most ",
+        std::to_string(descriptor::FunctionSpec::kMaxArgs),
+        " are supported",
+      });
     }
 
     std::vector<ExpectedType> argTypes;
@@ -36,9 +43,13 @@ namespace expo::modules::v2::decoders {
 
     const jclass sharedClass = sharedobjects::SharedObjectClassRegistry::javaClassOf(classId);
     if (sharedClass == nullptr) {
-      throw std::invalid_argument(
-        "Shared class " + jsName + " (id " + std::to_string(classId) + ") is not registered"
-      );
+      throwInvalidArgument({
+        "Shared class ",
+        jsName,
+        " (id ",
+        std::to_string(classId),
+        ") is not registered",
+      });
     }
 
     descriptor::StaticFunctionSpec constructor{

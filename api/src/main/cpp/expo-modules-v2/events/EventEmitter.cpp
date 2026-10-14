@@ -14,6 +14,7 @@
 #include <expo-modules-v2/jni/JEventSupport.h>
 #include <expo-modules-v2/objects/ObjectNativeState.h>
 #include <expo-modules-v2/objects/RuntimeObjects.h>
+#include <expo-modules-v2/utils/Throw.h>
 
 namespace expo::modules::v2::events {
   namespace {
@@ -61,22 +62,20 @@ namespace expo::modules::v2::events {
     ) {
       std::shared_ptr<objects::ObjectNativeState> node = objects::ObjectNativeState::of(rt, object);
       if (node == nullptr) {
-        throw facebook::jsi::JSError(
-          rt,
-          "'" + std::string(member) + "' called on something that is not a module or shared object"
-        );
+        throwJSError(rt, {
+          "'",
+          std::string(member),
+          "' called on something that is not a module or shared object",
+        });
       }
       if (node->instance() == nullptr) {
-        throw facebook::jsi::JSError(
-          rt,
-          "Cannot call '" + std::string(member) + "' on a released shared object"
-        );
+        throwJSError(rt, {"Cannot call '", std::string(member), "' on a released shared object"});
       }
 
       objects::RuntimeObjects* table = objects::RuntimeObjects::find(rt);
       async::AsyncRuntimeState* async = async::AsyncRuntimeState::find(rt);
       if (table == nullptr || async == nullptr) {
-        throw facebook::jsi::JSError(rt, "The event emitter is not available in this runtime");
+        throwJSError(rt, {"The event emitter is not available in this runtime"});
       }
 
       return Emitter{.node = std::move(node), .table = table, .async = async};
@@ -101,19 +100,21 @@ namespace expo::modules::v2::events {
       const std::string_view member
     ) {
       if (count < 1 || !args[0].isString()) {
-        throw facebook::jsi::JSError(
-          rt,
-          "'" + std::string(member) + "' expects an event name as its first argument"
-        );
+        throwJSError(rt, {
+          "'",
+          std::string(member),
+          "' expects an event name as its first argument",
+        });
       }
       const std::string name = args[0].getString(rt).utf8(rt);
       const int index = emitter.node->eventIndexOf(name);
       if (index < 0) {
-        throw facebook::jsi::JSError(
-          rt,
-          "'" + name + "' is not an event of this object - it declares: " +
-          declaredEvents(*emitter.node)
-        );
+        throwJSError(rt, {
+          "'",
+          name,
+          "' is not an event of this object - it declares: ",
+          declaredEvents(*emitter.node),
+        });
       }
       return Declared{.spec = *emitter.node->eventAt(index), .index = index};
     }
@@ -125,10 +126,11 @@ namespace expo::modules::v2::events {
       const std::string_view member
     ) {
       if (count < 2 || !args[1].isObject() || !args[1].getObject(rt).isFunction(rt)) {
-        throw facebook::jsi::JSError(
-          rt,
-          "'" + std::string(member) + "' expects a listener function as its second argument"
-        );
+        throwJSError(rt, {
+          "'",
+          std::string(member),
+          "' expects a listener function as its second argument",
+        });
       }
       return args[1].getObject(rt).getFunction(rt);
     }
@@ -198,10 +200,11 @@ namespace expo::modules::v2::events {
       const std::string_view member
     ) {
       if (!thisValue.isObject()) {
-        throw facebook::jsi::JSError(
-          rt,
-          "'" + std::string(member) + "' called on something that is not a module or shared object"
-        );
+        throwJSError(rt, {
+          "'",
+          std::string(member),
+          "' called on something that is not a module or shared object",
+        });
       }
       return thisValue.getObject(rt);
     }

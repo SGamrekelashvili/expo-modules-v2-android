@@ -6,13 +6,13 @@
 
 #include <kolibri/defines.h>
 
+#include <expo-modules-v2/utils/Throw.h>
+
 namespace expo::modules::v2 {
   [[noreturn]] inline void throwUnhandled(
     const int code
   ) {
-    throw std::invalid_argument(
-      std::string("This visitor has no handler for code ") + std::to_string(code)
-    );
+    throwInvalidArgument({"This visitor has no handler for code ", std::to_string(code)});
   }
 
   template<typename V, auto A>

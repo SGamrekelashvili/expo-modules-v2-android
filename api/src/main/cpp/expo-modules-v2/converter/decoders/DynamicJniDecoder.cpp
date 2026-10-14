@@ -5,6 +5,7 @@
 #include <expo-modules-v2/jni/JRecordRegistry.h>
 #include <expo-modules-v2/converter/decoders/JniDecode.h>
 #include <expo-modules-v2/converter/JsiBuilders.h>
+#include <expo-modules-v2/utils/Throw.h>
 #include <kolibri/Ref.h>
 #include <kolibri/class.h>
 #include <kolibri/string_utils.h>
@@ -54,9 +55,7 @@ namespace expo::modules::v2 {
   facebook::jsi::Value DynamicJniDecoder::operator()<CppType::RECORD>() const {
     const kolibri::Ref<kolibri::JMap> map = JRecordRegistry::dynamicRecordToMap(env, object);
     if (!map) {
-      throw std::runtime_error(
-        "A record codec was unregistered between classification and decode"
-      );
+      throwRuntimeError({"A record codec was unregistered between classification and decode"});
     }
     return decodeFromJniDynamic(env, rt, map.get());
   }

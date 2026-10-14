@@ -6,11 +6,13 @@
 #include <kolibri/binary/BinaryBuffer.h>
 #include <kolibri/binary/BinaryReader.h>
 #include <kolibri/env.h>
+#include <kolibri/defines.h>
 
 #include <expo-modules-v2/converter/decoders/BufferDecode.h>
 #include <expo-modules-v2/jni/JTrampoline.h>
 #include <expo-modules-v2/jsi/NativeError.h>
 #include <expo-modules-v2/converter/decoders/JniDecode.h>
+#include <expo-modules-v2/utils/Throw.h>
 
 namespace expo::modules::v2::async {
   namespace {
@@ -18,12 +20,12 @@ namespace expo::modules::v2::async {
      * A host function has only a `jsi::Runtime&`, so the state has to be reachable from one.
      */
     std::mutex& registryMutex() {
-      static std::mutex mutex;
+      NO_DESTROY static std::mutex mutex;
       return mutex;
     }
 
     std::unordered_map<const facebook::jsi::Runtime*, AsyncRuntimeState*>& registry() {
-      static std::unordered_map<const facebook::jsi::Runtime*, AsyncRuntimeState*> states;
+      NO_DESTROY static std::unordered_map<const facebook::jsi::Runtime*, AsyncRuntimeState*> states;
       return states;
     }
 
@@ -130,15 +132,16 @@ namespace expo::modules::v2::async {
   ) {
     const auto found = pending_.find(id);
     if (found == pending_.end()) [[unlikely]] {
-      throw std::runtime_error("Unexpected error");
+      throwRuntimeError({"Unexpected error"});
     }
 
     auto& pending = found->second;
     if (pending.outcome.has_value()) {
       facebook::jsi::Value outcome = std::move(*pending.outcome);
+      const bool rejected = pending.rejected;
       pending_.erase(found);
 
-      if (pending.rejected) [[unlikely]] {
+      if (rejected) [[unlikely]] {
         return callPromiseReject(rt, std::move(outcome));
       }
 
@@ -256,10 +259,10 @@ namespace expo::modules::v2::async {
 
     const kolibri::binary::BinaryBuffer::Claim claim;
     if (!claim) {
-      throw std::runtime_error(
+      throwRuntimeError({
         "The binary bridge buffer is already in use while settling a promise - a job queue was "
-        "drained from inside a host function"
-      );
+        "drained from inside a host function",
+      });
     }
 
     kolibri::binary::Reader reader{

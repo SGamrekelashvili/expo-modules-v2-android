@@ -106,6 +106,18 @@ namespace expo::modules::v2::jsi {
     return runtime_->drainMicrotasks();
   }
 
+  static facebook::jsi::Value logFromJavaScript(
+    facebook::jsi::Runtime& rt,
+    const facebook::jsi::Value&,
+    const facebook::jsi::Value* args,
+    size_t count
+  ) {
+    if (count >= 1 && args[0].isString()) {
+      logLine(args[0].getString(rt).utf8(rt));
+    }
+    return facebook::jsi::Value::undefined();
+  }
+
   static facebook::jsi::Object makeCoreObject(facebook::jsi::Runtime& rt, std::string_view engineName) {
     auto core = facebook::jsi::Object(rt);
     core.setProperty(rt, "apiVersion", facebook::jsi::String::createFromUtf8(rt, "2.0.0-alpha"));
@@ -119,17 +131,7 @@ namespace expo::modules::v2::jsi {
       rt,
       facebook::jsi::PropNameID::forAscii(rt, "nativeLog"),
       1,
-      [](
-      facebook::jsi::Runtime& rt,
-      const facebook::jsi::Value&,
-      const facebook::jsi::Value* args,
-      size_t count
-    ) -> facebook::jsi::Value {
-        if (count >= 1 && args[0].isString()) {
-          logLine(args[0].getString(rt).utf8(rt));
-        }
-        return facebook::jsi::Value::undefined();
-      }
+      &logFromJavaScript
     );
     core.setProperty(rt, "nativeLog", std::move(nativeLog));
     return core;

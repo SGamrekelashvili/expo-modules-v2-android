@@ -8,6 +8,7 @@
 #include <expo-modules-v2/converter/decoders/JniDecode.h>
 #include <expo-modules-v2/converter/encoders/BufferEncode.h>
 #include <expo-modules-v2/converter/encoders/JniEncode.h>
+#include <expo-modules-v2/utils/Throw.h>
 
 #include <array>
 #include <string>
@@ -26,11 +27,13 @@ namespace expo::modules::v2 {
       const FunctionSpec& spec,
       const size_t count
     ) {
-      throw facebook::jsi::JSError(
-        rt,
-        spec.name + " expects " + std::to_string(spec.argTypes.size()) +
-        " argument(s), but received " + std::to_string(count)
-      );
+      throwJSError(rt, {
+        spec.name,
+        " expects ",
+        std::to_string(spec.argTypes.size()),
+        " argument(s), but received ",
+        std::to_string(count),
+      });
     }
 
     /**
@@ -505,10 +508,10 @@ namespace expo::modules::v2 {
 
       async::AsyncRuntimeState* state = async::AsyncRuntimeState::find(rt);
       if (state == nullptr) [[unlikely]] {
-        throw facebook::jsi::JSError(
-          rt,
-          spec.name + " is a suspend export, but this runtime has no async context"
-        );
+        throwJSError(rt, {
+          spec.name,
+          " is a suspend export, but this runtime has no async context",
+        });
       }
 
       // TODO(@lukmccall): can we pass reference instead of cloning

@@ -3,6 +3,7 @@
 #include <expo-modules-v2/converter/encoders/EncodeCommon.h>
 #include <expo-modules-v2/converter/encoders/JniEncoder.h>
 #include <expo-modules-v2/jsi/JavaScriptValue.h>
+#include <expo-modules-v2/utils/Throw.h>
 #include <kolibri/array.h>
 #include <kolibri/box.h>
 #include <kolibri/class.h>
@@ -105,7 +106,7 @@ namespace expo::modules::v2 {
       }
 
       if (object.isFunction(rt)) {
-        throw facebook::jsi::JSError(rt, "Cannot convert a JS function to a Java value"); // TODO: callbacks
+        throwJSError(rt, {"Cannot convert a JS function to a Java value"}); // TODO: callbacks
       }
 
       if (object.isArrayBuffer(rt)) {
@@ -128,6 +129,6 @@ namespace expo::modules::v2 {
       return map;
     }
 
-    throw facebook::jsi::JSError(rt, "Cannot convert this JS value to a Java value");
+    throwJSError(rt, {"Cannot convert this JS value to a Java value"});
   }
 } // namespace expo::modules::v2

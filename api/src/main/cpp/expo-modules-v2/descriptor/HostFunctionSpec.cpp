@@ -9,6 +9,8 @@
 #include <kolibri/exception.h>
 #include <kolibri/utils.h>
 
+#include <expo-modules-v2/utils/Throw.h>
+
 namespace expo::modules::v2::descriptor {
   HostFunctionSpec::HostFunctionSpec(FunctionSpec spec)
     : FunctionSpec(std::move(spec)),
@@ -35,7 +37,7 @@ namespace expo::modules::v2::descriptor {
     } catch (const facebook::jsi::JSError&) {
       throw;
     } catch (const std::exception& e) {
-      throw facebook::jsi::JSError(rt, std::string("native call failed: ") + e.what());
+      throwJSError(rt, {"native call failed: ", e.what()});
     }
   }
 
@@ -48,9 +50,13 @@ namespace expo::modules::v2::descriptor {
     const jmethodID resolved = env->GetMethodID(declaringClass, methodName.c_str(), signature.c_str());
     kolibri::checkAndThrowPending(env);
     if (resolved == nullptr) {
-      throw std::runtime_error(
-        "No method " + methodName + signature + " on " + kolibri::describeClass(env, declaringClass)
-      );
+      throwRuntimeError({
+        "No method ",
+        methodName,
+        signature,
+        " on ",
+        kolibri::describeClass(env, declaringClass),
+      });
     }
     method = resolved;
   }

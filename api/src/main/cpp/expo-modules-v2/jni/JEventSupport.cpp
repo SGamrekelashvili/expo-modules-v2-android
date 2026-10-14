@@ -16,6 +16,7 @@
 #include <expo-modules-v2/jsi/JavaScriptRuntime.h>
 #include <expo-modules-v2/objects/ObjectNativeState.h>
 #include <expo-modules-v2/objects/RuntimeObjects.h>
+#include <expo-modules-v2/utils/Throw.h>
 
 namespace expo::modules::v2 {
   namespace {
@@ -120,9 +121,11 @@ namespace expo::modules::v2 {
 
         const kolibri::binary::BinaryBuffer::Claim claim;
         if (!claim) {
-          throw std::runtime_error(
-            "The binary bridge buffer is already in use while emitting '" + target->spec.name + "'"
-          );
+          throwRuntimeError({
+            "The binary bridge buffer is already in use while emitting '",
+            target->spec.name,
+            "'",
+          });
         }
         kolibri::binary::Reader reader{
           .position = claim.buffer().data(),

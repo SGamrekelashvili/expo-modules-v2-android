@@ -9,6 +9,8 @@
 #include <kolibri/exception.h>
 #include <kolibri/utils.h>
 
+#include <expo-modules-v2/utils/Throw.h>
+
 namespace expo::modules::v2::descriptor {
   StaticFunctionSpec::StaticFunctionSpec(FunctionSpec spec)
     : FunctionSpec(std::move(spec)),
@@ -27,7 +29,7 @@ namespace expo::modules::v2::descriptor {
     } catch (const facebook::jsi::JSError&) {
       throw;
     } catch (const std::exception& e) {
-      throw facebook::jsi::JSError(rt, std::string("native call failed: ") + e.what());
+      throwJSError(rt, {"native call failed: ", e.what()});
     }
   }
 
@@ -44,10 +46,13 @@ namespace expo::modules::v2::descriptor {
     );
     kolibri::checkAndThrowPending(env);
     if (resolved == nullptr) {
-      throw std::runtime_error(
-        "No static method " + methodName + signature + " on " +
-        kolibri::describeClass(env, declaringClass)
-      );
+      throwRuntimeError({
+        "No static method ",
+        methodName,
+        signature,
+        " on ",
+        kolibri::describeClass(env, declaringClass),
+      });
     }
     method = resolved;
   }

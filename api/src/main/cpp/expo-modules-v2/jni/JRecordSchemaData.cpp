@@ -5,6 +5,7 @@
 #include <kolibri/binary/BinaryReader.h>
 
 #include <expo-modules-v2/decoders/ExpectedTypeDecoder.h>
+#include <expo-modules-v2/utils/Throw.h>
 
 namespace expo::modules::v2 {
   std::string JRecordSchemaData::Accessors::name(JNIEnv* env) const {
@@ -52,7 +53,7 @@ namespace expo::modules::v2 {
     }
 
     if (reader.position != reader.end) {
-      throw std::runtime_error("Trailing type codes in a record schema");
+      throwRuntimeError({"Trailing type codes in a record schema"});
     }
 
     return result;

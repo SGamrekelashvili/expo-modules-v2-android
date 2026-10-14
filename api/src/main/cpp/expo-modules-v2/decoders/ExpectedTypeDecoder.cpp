@@ -3,6 +3,8 @@
 #include <stdexcept>
 #include <string>
 
+#include <expo-modules-v2/utils/Throw.h>
+
 namespace expo::modules::v2::decoders {
   namespace {
     struct Decoder {
@@ -24,15 +26,15 @@ namespace expo::modules::v2::decoders {
         const CppType kind = static_cast<CppType>(rawCode & ~kHeadFlagsMask);
 
         if (usesBuffer && !isHead) {
-          throw std::invalid_argument(
-            "kUsesBufferFlag is head-position only; found it on a nested type code"
-          );
+          throwInvalidArgument({
+            "kUsesBufferFlag is head-position only; found it on a nested type code",
+          });
         }
         if (usesBuffer && !allowBufferedHead) {
-          throw std::invalid_argument(
+          throwInvalidArgument({
             "kUsesBufferFlag is not allowed in this context: record fields ride their "
-            "record's transport"
-          );
+            "record's transport",
+          });
         }
 
         if (kind == CppType::LIST) {
@@ -56,7 +58,7 @@ namespace expo::modules::v2::decoders {
         if (kind == CppType::SHARED_OBJECT) {
           // TODO(@lukmccall): remove check?
           if (usesBuffer) {
-            throw std::invalid_argument("A shared object cannot carry kUsesBufferFlag");
+            throwInvalidArgument({"A shared object cannot carry kUsesBufferFlag"});
           }
           return ExpectedType::sharedObject(read(), nullable);
         }
@@ -65,7 +67,7 @@ namespace expo::modules::v2::decoders {
               kind == CppType::BOOLEAN || kind == CppType::INT || kind == CppType::LONG ||
               kind == CppType::FLOAT || kind == CppType::DOUBLE || kind == CppType::UNIT
             )) {
-          throw std::invalid_argument("Scalar CppType cannot carry the nullable flag");
+          throwInvalidArgument({"Scalar CppType cannot carry the nullable flag"});
         }
 
         if (usesBuffer) {
@@ -93,21 +95,21 @@ namespace expo::modules::v2::decoders {
           case CppType::BOX_DOUBLE:
             return;
           default:
-            throw std::invalid_argument("This CppType cannot carry kUsesBufferFlag");
+            throwInvalidArgument({"This CppType cannot carry kUsesBufferFlag"});
         }
       }
 
       static void requireBufferSafeIfBuffered(const ExpectedType& type) {
         if (type.usesBuffer() && !type.bufferSafe()) {
-          throw std::invalid_argument(
-            "kUsesBufferFlag on a type that is not buffer-safe (it contains a JSI handle)"
-          );
+          throwInvalidArgument({
+            "kUsesBufferFlag on a type that is not buffer-safe (it contains a JSI handle)",
+          });
         }
       }
 
       int read() {
         if (remaining == 0) {
-          throw std::invalid_argument("Invalid payload");
+          throwInvalidArgument({"Invalid payload"});
         }
 
         remaining--;

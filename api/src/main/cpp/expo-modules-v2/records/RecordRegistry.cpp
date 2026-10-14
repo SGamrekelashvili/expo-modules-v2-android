@@ -5,18 +5,19 @@
 #include <utility>
 
 #include <kolibri/env.h>
+#include <kolibri/defines.h>
 
 #include <expo-modules-v2/jni/JRecordRegistry.h>
 
 namespace expo::modules::v2 {
   namespace {
     std::mutex& registryMutex() {
-      static std::mutex mutex;
+      NO_DESTROY static std::mutex mutex;
       return mutex;
     }
 
     std::unordered_map<int32_t, std::unique_ptr<const RecordSchema>>& registryMap() {
-      static std::unordered_map<int32_t, std::unique_ptr<const RecordSchema>> map;
+      NO_DESTROY static std::unordered_map<int32_t, std::unique_ptr<const RecordSchema>> map;
       return map;
     }
   }
