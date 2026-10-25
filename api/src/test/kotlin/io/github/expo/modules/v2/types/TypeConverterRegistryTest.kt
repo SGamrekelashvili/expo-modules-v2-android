@@ -3,12 +3,14 @@ package io.github.expo.modules.v2.types
 import io.github.expo.modules.v2.converters.ArrayConverter
 import io.github.expo.modules.v2.converters.DurationConverter
 import io.github.expo.modules.v2.converters.IntArrayConverter
+import io.github.expo.modules.v2.converters.PathConverter
 import io.github.expo.modules.v2.converters.SetConverter
 import io.github.expo.modules.v2.converters.TypeConverter
 import io.github.expo.modules.v2.converters.UriConverter
 import io.github.expo.modules.v2.converters.UrlConverter
 import java.net.URI
 import java.net.URL
+import java.nio.file.Path
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -30,6 +32,7 @@ class TypeConverterRegistryTest {
     assertTrue(TypeDescriptor.Simple(URL::class.java, false).converter is UrlConverter)
     assertTrue(TypeDescriptor.Simple(URI::class.java, false).converter is UriConverter)
     assertTrue(TypeDescriptor.Simple(Duration::class.java, false).converter is DurationConverter)
+    assertTrue(TypeDescriptor.Simple(Path::class.java, false).converter is PathConverter)
   }
 
   @Test

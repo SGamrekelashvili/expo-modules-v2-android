@@ -116,11 +116,14 @@ object TypeConverterRegistry {
       ::UriConverter
     )
 
-    // TODO(@lukmccall): Fix path for Android < 26
-    +entry(
-      Path::class.java,
-      ::PathConverter
-    )
+    // java.nio.file only exists on Android 8+ (API 26). On older devices resolving Path::class here
+    // throws NoClassDefFoundError inside this initializer and takes the whole registry down with it.
+    if (runCatching { Class.forName("java.nio.file.Path") }.isSuccess) {
+      +entry(
+        Path::class.java,
+        ::PathConverter
+      )
+    }
   }
 
   fun converter(typeDescriptor: TypeDescriptor.Simple): TypeConverter<*> {
