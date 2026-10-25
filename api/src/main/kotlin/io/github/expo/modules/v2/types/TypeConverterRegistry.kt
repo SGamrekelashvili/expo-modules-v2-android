@@ -116,13 +116,16 @@ object TypeConverterRegistry {
       ::UriConverter
     )
 
-    // java.nio.file only exists on Android 8+ (API 26). On older devices resolving Path::class here
-    // throws NoClassDefFoundError inside this initializer and takes the whole registry down with it.
-    if (runCatching { Class.forName("java.nio.file.Path") }.isSuccess) {
+    // java.nio.file only exists on Android 8+ (API 26). Below that, resolving Path::class throws
+    // NoClassDefFoundError inside this initializer and takes every converter down with it
+    // (expo/expo#52132). Catching the exact reference, rather than probing the class by name,
+    // keeps Path registered for apps that desugar java.nio.file, where D8 renames the type.
+    try {
       +entry(
         Path::class.java,
         ::PathConverter
       )
+    } catch (e: NoClassDefFoundError) {
     }
   }
 

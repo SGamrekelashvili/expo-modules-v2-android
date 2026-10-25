@@ -5,11 +5,14 @@ import io.github.expo.modules.v2.converters.DurationConverter
 import io.github.expo.modules.v2.converters.IntArrayConverter
 import io.github.expo.modules.v2.converters.PathConverter
 import io.github.expo.modules.v2.converters.SetConverter
+import io.github.expo.modules.v2.converters.StringConverter
 import io.github.expo.modules.v2.converters.TypeConverter
 import io.github.expo.modules.v2.converters.UriConverter
 import io.github.expo.modules.v2.converters.UrlConverter
+import java.io.File
 import java.net.URI
 import java.net.URL
+import java.net.URLClassLoader
 import java.nio.file.Path
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -33,6 +36,29 @@ class TypeConverterRegistryTest {
     assertTrue(TypeDescriptor.Simple(URI::class.java, false).converter is UriConverter)
     assertTrue(TypeDescriptor.Simple(Duration::class.java, false).converter is DurationConverter)
     assertTrue(TypeDescriptor.Simple(Path::class.java, false).converter is PathConverter)
+  }
+
+  /** Android 7 (API 24/25) has no java.nio.file. The registry must still come up without it (expo/expo#52132). */
+  @Test
+  fun `initialises where java nio file is absent`() {
+    val hidingParent = object : ClassLoader(getPlatformClassLoader()) {
+      override fun loadClass(name: String, resolve: Boolean): Class<*> =
+        if (name.startsWith("java.nio.file.")) throw ClassNotFoundException(name) else super.loadClass(name, resolve)
+    }
+    val classpath = System.getProperty("java.class.path")
+      .split(File.pathSeparator)
+      .map { File(it).toURI().toURL() }
+      .toTypedArray()
+
+    URLClassLoader(classpath, hidingParent).use { loader ->
+      val registry = Class.forName(TypeConverterRegistry::class.java.name, true, loader)
+      val simple = loader.loadClass(TypeDescriptor.Simple::class.java.name)
+      val descriptor = simple
+        .getConstructor(Class::class.java, Boolean::class.javaPrimitiveType)
+        .newInstance(String::class.java, false)
+      val converter = registry.getMethod("converter", simple).invoke(registry.getField("INSTANCE").get(null), descriptor)
+      assertEquals(StringConverter::class.java.name, converter.javaClass.name)
+    }
   }
 
   @Test
